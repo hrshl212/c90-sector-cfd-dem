@@ -1,0 +1,21 @@
+name: validate-public-artifacts
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python3 -m pip install matplotlib
+      - run: >-
+          python3 scripts/plot_particle_population.py
+          --retention-csv data/sanitized/particle_retention_timeseries.csv
+          --count-csv data/sanitized/particle_count_timeseries.csv
+          --output-dir build/figures
+      - run: python3 scripts/check_release.py
