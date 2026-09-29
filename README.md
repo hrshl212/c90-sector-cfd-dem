@@ -50,17 +50,32 @@ sustained coupled multi-rank pressure evolution is not qualified.
 
 ## C90 versus full cylinder
 
-The following user-selected figures are included as interim visual
-comparisons. They provide qualitative project context and are not used for
-the quantitative validation claims in this repository.
+These matched snapshots compare the monodisperse 20 µm-radius cases at nearly
+the same simulated time: `0.700515 s` for the full cylinder and `0.700000 s`
+for the 90° sector. Both flow panels use one shared color scale. The full
+cylinder is sampled through its centerline; the sector is sampled on its
+mid-angle radial plane.
+
+![Matched full-cylinder and C90 axial gas-flow fields](figures/validation/matched_gas_flow.png)
+
+The particle view uses the geometry extracted from the fluid volume-fraction
+field and colors particles by axial velocity on a shared scale. At this
+instant, the full cylinder contains 432,544 particles; the sector contains
+107,562, equivalent to 430,248 particles after fourfold replication. A
+deterministic display subset is used only to keep the raster figure legible.
+
+![Matched full-cylinder and C90 particle distributions](figures/validation/matched_particle_geometry.png)
+
+The following time-history figures provide additional qualitative context.
+They are not used for the quantitative validation claims in this repository.
 
 ![Interim piston-fluid-force comparison](figures/validation/piston_fluid_force_c90_vs_full360_interim.png)
 
 ![Interim particle-count comparison](figures/validation/particle_count_c90_vs_full360_interim.png)
 
 The repository also includes a measured-only particle-population dataset over
-the common interval through approximately `0.84 s`, along with an independent
-plotting script.
+the common interval through approximately `0.84 s`, along with independent
+plotting scripts.
 
 ## Repository map
 
@@ -84,7 +99,7 @@ plotting script.
   boundary.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — clean-room contribution rules.
 
-## Reproduce the measured particle figures
+## Reproduce the figures
 
 ```bash
 python3 -m pip install matplotlib
@@ -93,6 +108,9 @@ python3 scripts/plot_particle_population.py \
   --count-csv data/sanitized/particle_count_timeseries.csv \
   --output-dir build/figures
 ```
+
+The matched field and particle renderer accepts AMReX plotfile directories;
+see [`scripts/README.md`](scripts/README.md) for its inputs and dependencies.
 
 Run the public-data and release-hygiene checks with:
 
@@ -103,6 +121,6 @@ python3 scripts/check_release.py
 
 ## Status
 
-This local tree is approved for Git preparation. The two comparison figures
-are intentionally retained as interim qualitative context. No MFiX-Exa source
-or private source modification is included.
+This local tree is approved for Git preparation. The time-history comparison
+figures are retained as qualitative context. No MFiX-Exa source or private
+source modification is included.

@@ -25,6 +25,9 @@ REQUIRED = (
     "data/sanitized/particle_retention_timeseries.csv",
     "data/sanitized/particle_count_timeseries.csv",
     "scripts/plot_particle_population.py",
+    "scripts/render_snapshot_comparison.py",
+    "figures/validation/matched_gas_flow.png",
+    "figures/validation/matched_particle_geometry.png",
     "figures/validation/piston_fluid_force_c90_vs_full360_interim.png",
     "figures/validation/particle_count_c90_vs_full360_interim.png",
 )
