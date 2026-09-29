@@ -39,6 +39,9 @@ The strongest accepted results include:
 - a focused tangential-history seam test agreeing with its rotated interior
   reference to `1.126e-13` maximum absolute vector error;
 - mature one-GPU throughput of `0.363756838 s/step` over 100 fluid steps; and
+- a separate large-particle campaign with profiling-guided DEM optimizations,
+  including a qualified 52.78% reduction in normalized DEM-substep time from
+  spatial sorting; and
 - full-cylinder-equivalent force-ledger closure to `1.11022e-15 N`.
 
 Scope matters: published coupled production results use one MPI rank.
@@ -69,6 +72,8 @@ plotting script.
   normalization, and evidence scope.
 - [`docs/validation-results.md`](docs/validation-results.md) — accepted,
   sanitized result tables.
+- [`docs/gpu-performance.md`](docs/gpu-performance.md) — GPU optimization
+  strategy, profiling methodology, and performance/accuracy tradeoffs.
 - [`docs/limitations.md`](docs/limitations.md) — unresolved and unqualified
   behavior.
 - [`data/README.md`](data/README.md) — public data schemas.
