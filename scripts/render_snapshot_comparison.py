@@ -10,6 +10,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import vtk
+from matplotlib.patches import Patch, Rectangle
 from vtk.util.numpy_support import vtk_to_numpy
 
 
@@ -108,6 +109,9 @@ def plot_flow(
     sector: dict[str, np.ndarray],
     full_time: float,
     sector_time: float,
+    piston_z0: float,
+    piston_speed: float,
+    piston_radius: float,
     output: Path,
 ) -> None:
     center_y = int(np.argmin(np.abs(full["y"])))
@@ -121,17 +125,27 @@ def plot_flow(
 
     fig, axes = plt.subplots(2, 1, figsize=(12.5, 5.8), constrained_layout=True)
     panels = (
-        (axes[0], full["z"] * MM, full["x"] * MM, full_w.T, "Full 360° cylinder"),
+        (
+            axes[0],
+            full["z"] * MM,
+            full["x"] * MM,
+            full_w.T,
+            "Full 360° cylinder",
+            full_time,
+            False,
+        ),
         (
             axes[1],
             sector["z"] * MM,
             sector["x"] * MM,
             sector_w.T,
             "90° rotational sector",
+            sector_time,
+            True,
         ),
     )
     contour = None
-    for axis, horizontal, vertical, field, title in panels:
+    for axis, horizontal, vertical, field, title, time_s, is_sector in panels:
         contour = axis.contourf(
             horizontal,
             vertical,
@@ -148,6 +162,21 @@ def plot_flow(
             colors="#232a31",
             linewidths=0.7,
         )
+        piston_z = (piston_z0 + piston_speed * time_s) * MM
+        piston_bottom = 0.0 if is_sector else -piston_radius * MM
+        piston_height = piston_radius * MM if is_sector else 2.0 * piston_radius * MM
+        axis.add_patch(
+            Rectangle(
+                (0.0, piston_bottom),
+                piston_z,
+                piston_height,
+                facecolor="#f7f7f5",
+                edgecolor="#39434c",
+                hatch="////",
+                linewidth=0.9,
+                zorder=5,
+            )
+        )
         axis.set_title(title, fontsize=13, weight="semibold", pad=10)
         axis.set_xlabel("z (mm)")
         axis.set_ylabel("x (mm)")
@@ -155,6 +184,20 @@ def plot_flow(
         axis.set_ylim(-4.6, 4.6)
         axis.set_aspect("equal", adjustable="box")
         style_axis(axis)
+    axes[0].legend(
+        handles=[
+            Patch(
+                facecolor="#f7f7f5",
+                edgecolor="#39434c",
+                hatch="////",
+                label="penalized IBM piston",
+            )
+        ],
+        loc="upper right",
+        frameon=True,
+        framealpha=0.95,
+        fontsize=9,
+    )
     colorbar = fig.colorbar(contour, ax=axes, location="right", shrink=0.82, pad=0.025)
     colorbar.set_ticks(np.linspace(LIQUID_VELOCITY_MIN, LIQUID_VELOCITY_MAX, 6))
     colorbar.set_label("Axial liquid velocity (m s$^{-1}$)")
@@ -253,15 +296,39 @@ def geometry_profile(fields: dict[str, np.ndarray]) -> tuple[np.ndarray, np.ndar
     return fields["z"][valid] * MM, radii[valid] * MM
 
 
-def draw_side_geometry(
+def draw_3d_geometry(
     axis: plt.Axes, profile_z: np.ndarray, profile_r: np.ndarray, sector: bool
 ) -> None:
     line = dict(color="#263746", linewidth=0.8, alpha=0.78)
-    axis.plot(profile_z, profile_r, **line)
+    transition = np.flatnonzero(np.abs(np.diff(profile_r)) > 0.15)
+    ring_indices = np.unique(np.concatenate(([0], transition, transition + 1, [-1])))
     if sector:
-        axis.plot([profile_z[0], profile_z[-1]], [0.0, 0.0], **line)
+        theta = np.linspace(0.0, np.pi / 2.0, 80)
+        generators = (0.0, np.pi / 4.0, np.pi / 2.0)
     else:
-        axis.plot(profile_z, -profile_r, **line)
+        theta = np.linspace(0.0, 2.0 * np.pi, 150)
+        generators = (0.0, np.pi / 2.0, np.pi, 3.0 * np.pi / 2.0)
+    for index in ring_indices:
+        radius = profile_r[index]
+        z_value = profile_z[index]
+        axis.plot(
+            np.full_like(theta, z_value),
+            radius * np.cos(theta),
+            radius * np.sin(theta),
+            **line,
+        )
+        if sector:
+            axis.plot([z_value, z_value], [0.0, radius], [0.0, 0.0], **line)
+            axis.plot([z_value, z_value], [0.0, 0.0], [0.0, radius], **line)
+    for angle in generators:
+        axis.plot(
+            profile_z,
+            profile_r * np.cos(angle),
+            profile_r * np.sin(angle),
+            **line,
+        )
+    if sector:
+        axis.plot(profile_z, np.zeros_like(profile_z), np.zeros_like(profile_z), **line)
 
 
 def plot_particles(
@@ -283,7 +350,11 @@ def plot_particles(
     v_min, v_max = np.nanpercentile(all_velocity, (1.0, 99.0))
     norm = mpl.colors.Normalize(vmin=v_min, vmax=v_max)
 
-    fig, axes = plt.subplots(2, 1, figsize=(12.5, 5.8), constrained_layout=True)
+    fig = plt.figure(figsize=(13.0, 5.8))
+    axes = [
+        fig.add_axes((0.02, 0.10, 0.42, 0.68), projection="3d"),
+        fig.add_axes((0.45, 0.10, 0.42, 0.68), projection="3d"),
+    ]
     panels = (
         (
             axes[0],
@@ -305,6 +376,7 @@ def plot_particles(
         scatter = axis.scatter(
             points[:, 2] * MM,
             points[:, 0] * MM,
+            points[:, 1] * MM,
             c=velocity,
             cmap="viridis",
             norm=norm,
@@ -313,21 +385,34 @@ def plot_particles(
             linewidths=0,
             rasterized=True,
         )
-        draw_side_geometry(axis, profile_z, profile_r, is_sector)
-        axis.set_title(title, fontsize=13, weight="semibold", pad=10)
+        draw_3d_geometry(axis, profile_z, profile_r, is_sector)
         axis.set_xlabel("z (mm)")
-        axis.set_ylabel("x (mm)")
+        axis.set_ylabel("x (mm)", labelpad=2)
+        axis.set_zlabel("y (mm)", labelpad=2)
         axis.set_xlim(0.0, 39.4)
         axis.set_ylim(-4.6, 4.6)
-        axis.set_aspect("equal", adjustable="box")
-        style_axis(axis)
-    colorbar = fig.colorbar(scatter, ax=axes, location="right", shrink=0.82, pad=0.025)
+        axis.set_zlim(-4.6, 4.6)
+        axis.set_box_aspect((4.3, 1.0, 1.0), zoom=1.18)
+        axis.view_init(elev=17, azim=-72)
+        axis.xaxis.set_major_locator(mpl.ticker.MaxNLocator(5))
+        axis.yaxis.set_major_locator(mpl.ticker.MaxNLocator(3))
+        axis.zaxis.set_major_locator(mpl.ticker.MaxNLocator(3))
+        axis.tick_params(pad=0, labelsize=8)
+        axis.grid(False)
+        axis.xaxis.pane.set_alpha(0.0)
+        axis.yaxis.pane.set_alpha(0.0)
+        axis.zaxis.pane.set_alpha(0.0)
+    fig.text(0.23, 0.80, panels[0][3], ha="center", va="center", fontsize=12, weight="semibold")
+    fig.text(0.66, 0.80, panels[1][3], ha="center", va="center", fontsize=12, weight="semibold")
+    color_axis = fig.add_axes((0.90, 0.16, 0.018, 0.58))
+    colorbar = fig.colorbar(scatter, cax=color_axis)
     colorbar.set_label("Particle axial velocity, $v_{p,z}$ (m s$^{-1}$)")
     fig.suptitle(
         "Particle distribution inside the simulated geometry\n"
         f"full: t = {full_time:.6f} s  ·  sector: t = {sector_time:.6f} s",
         fontsize=15,
         weight="semibold",
+        y=0.97,
     )
     output.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output, dpi=220, bbox_inches="tight", facecolor="white")
@@ -341,6 +426,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--sector-flow", type=Path, required=True)
     parser.add_argument("--sector-particles", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--piston-z0", type=float, default=0.0002)
+    parser.add_argument("--piston-speed", type=float, default=0.0017)
+    parser.add_argument("--piston-radius", type=float, default=0.00433)
     return parser.parse_args()
 
 
@@ -360,6 +448,9 @@ def main() -> None:
         sector_grid,
         full_time,
         sector_time,
+        args.piston_z0,
+        args.piston_speed,
+        args.piston_radius,
         args.output_dir / "matched_liquid_flow.png",
     )
     plot_cross_section(

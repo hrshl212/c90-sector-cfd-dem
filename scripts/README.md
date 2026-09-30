@@ -30,4 +30,6 @@ python3 scripts/render_snapshot_comparison.py \
 ```
 
 Use `--full-particles` only when the full-cylinder particles are stored in a
-different plotfile directory from its flow fields.
+different plotfile directory from its flow fields. The piston overlay defaults
+to `z0 = 0.2 mm`, speed `1.7 mm/s`, and radius `4.33 mm`; the corresponding
+`--piston-z0`, `--piston-speed`, and `--piston-radius` options use SI units.

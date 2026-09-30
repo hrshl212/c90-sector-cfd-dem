@@ -55,7 +55,9 @@ the same simulated time: `0.700515 s` for the full cylinder and `0.700000 s`
 for the 90° sector. Both flow panels use the same `0–0.002 m/s` axial liquid
 velocity range, identical plot limits, and a common physical axis scale. They
 are longitudinal views near the `y = 0` plane, with `z` horizontal and `x`
-vertical.
+vertical. The light hatched region identifies the volume occupied by the
+penalized IBM piston, whose plane is at approximately `z = 1.39 mm` in these
+snapshots.
 
 ![Matched full-cylinder and C90 axial liquid-flow fields](figures/validation/matched_liquid_flow.png)
 
@@ -66,9 +68,9 @@ the simulated quadrant retain the same coordinate and velocity scales.
 ![Matched axial liquid-velocity cross sections at z = 5 mm](figures/validation/matched_liquid_velocity_cross_section_z5mm.png)
 
 The particle view uses the geometry extracted from the fluid volume-fraction
-field and colors particles by axial velocity on a shared scale. The side
-projections use the same horizontal-`z`, vertical-`x` convention and equal
-physical axis scaling. At this
+field and colors particles by axial velocity on a shared scale. Perspective
+3D views keep the syringe axis horizontal and use identical coordinate bounds
+and geometry aspect ratios. At this
 instant, the full cylinder contains 432,544 particles; the sector contains
 107,562, equivalent to 430,248 particles after fourfold replication. A
 deterministic display subset is used only to keep the raster figure legible.
