@@ -10,7 +10,6 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import vtk
-from scipy.interpolate import RegularGridInterpolator
 from vtk.util.numpy_support import vtk_to_numpy
 
 
@@ -93,23 +92,6 @@ def read_particles(plotfile: Path) -> tuple[np.ndarray, np.ndarray]:
     return np.concatenate(points), np.concatenate(velocity)
 
 
-def sector_diagonal(fields: dict[str, np.ndarray]) -> tuple[np.ndarray, ...]:
-    radius = np.linspace(0.0, min(fields["x"][-1], fields["y"][-1]), 180)
-    rr, zz = np.meshgrid(radius, fields["z"])
-    xy = rr / np.sqrt(2.0)
-    samples = np.column_stack((zz.ravel(), xy.ravel(), xy.ravel()))
-    result = []
-    for name in ("w_g", "volfrac"):
-        interpolator = RegularGridInterpolator(
-            (fields["z"], fields["y"], fields["x"]),
-            fields[name],
-            bounds_error=False,
-            fill_value=np.nan,
-        )
-        result.append(interpolator(samples).reshape(rr.shape))
-    return radius, fields["z"], *result
-
-
 def fluid_mask(values: np.ndarray, volume_fraction: np.ndarray) -> np.ma.MaskedArray:
     return np.ma.masked_where((volume_fraction < 0.5) | ~np.isfinite(values), values)
 
@@ -128,21 +110,29 @@ def plot_flow(
 ) -> None:
     center_y = int(np.argmin(np.abs(full["y"])))
     full_w = fluid_mask(full["w_g"][:, center_y, :], full["volfrac"][:, center_y, :])
-    radius, sector_z, sector_w_raw, sector_vf = sector_diagonal(sector)
-    sector_w = fluid_mask(sector_w_raw, sector_vf)
+    sector_y = int(np.argmin(np.abs(sector["y"])))
+    sector_w = fluid_mask(
+        sector["w_g"][:, sector_y, :], sector["volfrac"][:, sector_y, :]
+    )
 
     combined = np.concatenate((full_w.compressed(), sector_w.compressed()))
     lower, upper = np.nanpercentile(combined, (1.0, 99.5))
     lower = min(lower, 0.0)
     levels = np.linspace(lower, upper, 80)
 
-    fig, axes = plt.subplots(1, 2, figsize=(10.8, 6.2), constrained_layout=True)
+    fig, axes = plt.subplots(2, 1, figsize=(12.5, 5.8), constrained_layout=True)
     panels = (
-        (axes[0], full["x"] * MM, full["z"] * MM, full_w, "Full 360° cylinder", "x (mm)"),
-        (axes[1], radius * MM, sector_z * MM, sector_w, "90° rotational sector", "r along θ = 45° (mm)"),
+        (axes[0], full["z"] * MM, full["x"] * MM, full_w.T, "Full 360° cylinder"),
+        (
+            axes[1],
+            sector["z"] * MM,
+            sector["x"] * MM,
+            sector_w.T,
+            "90° rotational sector",
+        ),
     )
     contour = None
-    for axis, horizontal, vertical, field, title, xlabel in panels:
+    for axis, horizontal, vertical, field, title in panels:
         contour = axis.contourf(
             horizontal,
             vertical,
@@ -160,11 +150,12 @@ def plot_flow(
             linewidths=0.7,
         )
         axis.set_title(title, fontsize=13, weight="semibold", pad=10)
-        axis.set_xlabel(xlabel)
-        axis.set_ylabel("z (mm)")
-        axis.set_ylim(max(full["z"][0], sector["z"][0]) * MM, 39.35)
+        axis.set_xlabel("z (mm)")
+        axis.set_ylabel("x (mm)")
+        axis.set_xlim(0.0, 39.4)
+        axis.set_aspect("equal", adjustable="box")
         style_axis(axis)
-    colorbar = fig.colorbar(contour, ax=axes, location="bottom", shrink=0.78, pad=0.08)
+    colorbar = fig.colorbar(contour, ax=axes, location="right", shrink=0.82, pad=0.025)
     colorbar.set_label("Axial gas velocity, $w_g$ (m s$^{-1}$)")
     fig.suptitle(
         "Matched gas-flow structure\n"
@@ -197,49 +188,15 @@ def geometry_profile(fields: dict[str, np.ndarray]) -> tuple[np.ndarray, np.ndar
     return fields["z"][valid] * MM, radii[valid] * MM
 
 
-def draw_geometry(
-    axis: plt.Axes,
-    profile_z: np.ndarray,
-    profile_r: np.ndarray,
-    sector: bool,
+def draw_side_geometry(
+    axis: plt.Axes, profile_z: np.ndarray, profile_r: np.ndarray, sector: bool
 ) -> None:
-    if sector:
-        theta = np.linspace(0.0, np.pi / 2.0, 100)
-        angles = (0.0, np.pi / 2.0)
-    else:
-        theta = np.linspace(0.0, 2.0 * np.pi, 160)
-        angles = (0.0, np.pi / 2.0, np.pi, 3.0 * np.pi / 2.0)
     line = dict(color="#263746", linewidth=0.8, alpha=0.78)
-    transition = np.flatnonzero(np.abs(np.diff(profile_r)) > 0.15)
-    ring_indices = np.unique(np.concatenate(([0], transition, transition + 1, [-1])))
-    for index in ring_indices:
-        radius = profile_r[index]
-        z_value = profile_z[index]
-        axis.plot(radius * np.cos(theta), radius * np.sin(theta), z_value, **line)
-    for angle in angles:
-        axis.plot(
-            profile_r * np.cos(angle),
-            profile_r * np.sin(angle),
-            profile_z,
-            **line,
-        )
+    axis.plot(profile_z, profile_r, **line)
     if sector:
-        for index in ring_indices:
-            radius = profile_r[index]
-            z_value = profile_z[index]
-            for angle in (0.0, np.pi / 2.0):
-                axis.plot(
-                    [0.0, radius * np.cos(angle)],
-                    [0.0, radius * np.sin(angle)],
-                    [z_value, z_value],
-                    **line,
-                )
-        axis.plot(
-            np.zeros_like(profile_z),
-            np.zeros_like(profile_z),
-            profile_z,
-            **line,
-        )
+        axis.plot([profile_z[0], profile_z[-1]], [0.0, 0.0], **line)
+    else:
+        axis.plot(profile_z, -profile_r, **line)
 
 
 def plot_particles(
@@ -261,11 +218,7 @@ def plot_particles(
     v_min, v_max = np.nanpercentile(all_velocity, (1.0, 99.0))
     norm = mpl.colors.Normalize(vmin=v_min, vmax=v_max)
 
-    fig = plt.figure(figsize=(11.2, 6.6), constrained_layout=True)
-    axes = [
-        fig.add_subplot(1, 2, 1, projection="3d"),
-        fig.add_subplot(1, 2, 2, projection="3d"),
-    ]
+    fig, axes = plt.subplots(2, 1, figsize=(12.5, 5.8), constrained_layout=True)
     panels = (
         (
             axes[0],
@@ -285,9 +238,8 @@ def plot_particles(
     scatter = None
     for axis, points, velocity, title, is_sector in panels:
         scatter = axis.scatter(
-            points[:, 0] * MM,
-            points[:, 1] * MM,
             points[:, 2] * MM,
+            points[:, 0] * MM,
             c=velocity,
             cmap="viridis",
             norm=norm,
@@ -296,29 +248,18 @@ def plot_particles(
             linewidths=0,
             rasterized=True,
         )
-        draw_geometry(axis, profile_z, profile_r, is_sector)
+        draw_side_geometry(axis, profile_z, profile_r, is_sector)
         axis.set_title(title, fontsize=13, weight="semibold", pad=10)
-        axis.set_xlabel("x (mm)", labelpad=2)
-        axis.set_ylabel("y (mm)", labelpad=2)
-        axis.set_zlabel("z (mm)", labelpad=4)
-        axis.set_zlim(0.0, 40.0)
+        axis.set_xlabel("z (mm)")
+        axis.set_ylabel("x (mm)")
+        axis.set_xlim(0.0, 39.4)
         if is_sector:
-            axis.set_xlim(0.0, 4.6)
             axis.set_ylim(0.0, 4.6)
-            axis.set_box_aspect((1, 1, 3.0))
         else:
-            axis.set_xlim(-4.6, 4.6)
             axis.set_ylim(-4.6, 4.6)
-            axis.set_box_aspect((2, 2, 3.0))
-        axis.view_init(elev=20, azim=-58)
-        axis.xaxis.set_major_locator(mpl.ticker.MaxNLocator(5))
-        axis.yaxis.set_major_locator(mpl.ticker.MaxNLocator(5))
-        axis.zaxis.set_major_locator(mpl.ticker.MaxNLocator(6))
-        axis.grid(False)
-        axis.xaxis.pane.set_alpha(0.0)
-        axis.yaxis.pane.set_alpha(0.0)
-        axis.zaxis.pane.set_alpha(0.0)
-    colorbar = fig.colorbar(scatter, ax=axes, location="bottom", shrink=0.75, pad=0.09)
+        axis.set_aspect("equal", adjustable="box")
+        style_axis(axis)
+    colorbar = fig.colorbar(scatter, ax=axes, location="right", shrink=0.82, pad=0.025)
     colorbar.set_label("Particle axial velocity, $v_{p,z}$ (m s$^{-1}$)")
     fig.suptitle(
         "Particle distribution inside the simulated geometry\n"

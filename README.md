@@ -52,14 +52,16 @@ sustained coupled multi-rank pressure evolution is not qualified.
 
 These matched snapshots compare the monodisperse 20 µm-radius cases at nearly
 the same simulated time: `0.700515 s` for the full cylinder and `0.700000 s`
-for the 90° sector. Both flow panels use one shared color scale. The full
-cylinder is sampled through its centerline; the sector is sampled on its
-mid-angle radial plane.
+for the 90° sector. Both flow panels use one shared color scale and a common
+physical axis scale. They are longitudinal views near the `y = 0` plane, with
+`z` horizontal and `x` vertical.
 
 ![Matched full-cylinder and C90 axial gas-flow fields](figures/validation/matched_gas_flow.png)
 
 The particle view uses the geometry extracted from the fluid volume-fraction
-field and colors particles by axial velocity on a shared scale. At this
+field and colors particles by axial velocity on a shared scale. The side
+projections use the same horizontal-`z`, vertical-`x` convention and equal
+physical axis scaling. At this
 instant, the full cylinder contains 432,544 particles; the sector contains
 107,562, equivalent to 430,248 particles after fourfold replication. A
 deterministic display subset is used only to keep the raster figure legible.

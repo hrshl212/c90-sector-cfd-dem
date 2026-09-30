@@ -16,7 +16,7 @@ links, and the absence of common private-workspace identifiers.
 
 `render_snapshot_comparison.py` reads matched AMReX field and particle
 plotfiles and produces the two snapshot figures shown in the main README. It
-requires NumPy, SciPy, Matplotlib, and a VTK build that includes the AMReX
+requires NumPy, Matplotlib, and a VTK build that includes the AMReX
 grid and particle readers. Raw simulation plotfiles are intentionally outside
 this repository.
 
