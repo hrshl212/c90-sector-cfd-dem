@@ -441,10 +441,14 @@ def plot_particles(
         axis.set_xlabel("z (mm)")
         axis.set_ylabel("x (mm)", labelpad=2)
         axis.set_zlabel("y (mm)", labelpad=2)
-        axis.set_xlim(0.0, 39.4)
-        axis.set_ylim(-4.6, 4.6)
-        axis.set_zlim(-4.6, 4.6)
-        axis.set_box_aspect((4.3, 1.0, 1.0), zoom=1.52)
+        # Leave projection-space padding around the physical geometry. Without
+        # it, the rear half of the full-cylinder inlet cap is clipped by the
+        # 3D axes box at oblique camera angles.
+        axis.set_xlim(-1.5, 40.5)
+        axis.set_ylim(-5.0, 5.0)
+        axis.set_zlim(-5.0, 5.0)
+        axis.set_xticks((0.0, 8.0, 16.0, 24.0, 32.0, 40.0))
+        axis.set_box_aspect((4.2, 1.0, 1.0), zoom=1.48)
         axis.view_init(elev=16, azim=-45)
         axis.xaxis.set_major_locator(mpl.ticker.MaxNLocator(5))
         axis.yaxis.set_major_locator(mpl.ticker.MaxNLocator(3))
