@@ -340,6 +340,38 @@ def draw_3d_geometry(
         shade=False,
     )
 
+    # Redraw the rear rim as a foreground line set. Matplotlib's translucent
+    # 3D surface sorting can otherwise hide part of this circumference even
+    # when it is inside the axes limits.
+    cap_line = dict(
+        color="#17232d",
+        linewidth=1.8,
+        alpha=1.0,
+        zorder=50,
+        clip_on=False,
+    )
+    axis.plot(
+        np.full_like(theta, profile_z[0]),
+        profile_r[0] * np.cos(theta),
+        profile_r[0] * np.sin(theta),
+        **cap_line,
+    )
+    if sector:
+        cap_spokes = (0.0, np.pi / 2.0)
+    else:
+        cap_spokes = tuple(np.linspace(0.0, 2.0 * np.pi, 9)[:-1])
+    for angle in cap_spokes:
+        axis.plot(
+            [profile_z[0], profile_z[0]],
+            [0.0, profile_r[0] * np.cos(angle)],
+            [0.0, profile_r[0] * np.sin(angle)],
+            color="#425866",
+            linewidth=0.65,
+            alpha=0.6,
+            zorder=49,
+            clip_on=False,
+        )
+
     if sector:
         # The two transparent radial faces identify the simulated quotient
         # domain without hiding particles inside it.
