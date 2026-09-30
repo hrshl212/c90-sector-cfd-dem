@@ -14,6 +14,8 @@ from vtk.util.numpy_support import vtk_to_numpy
 
 
 MM = 1.0e3
+LIQUID_VELOCITY_MIN = 0.0
+LIQUID_VELOCITY_MAX = 0.002
 
 
 def read_time(plotfile: Path) -> float:
@@ -115,10 +117,7 @@ def plot_flow(
         sector["w_g"][:, sector_y, :], sector["volfrac"][:, sector_y, :]
     )
 
-    combined = np.concatenate((full_w.compressed(), sector_w.compressed()))
-    lower, upper = np.nanpercentile(combined, (1.0, 99.5))
-    lower = min(lower, 0.0)
-    levels = np.linspace(lower, upper, 80)
+    levels = np.linspace(LIQUID_VELOCITY_MIN, LIQUID_VELOCITY_MAX, 80)
 
     fig, axes = plt.subplots(2, 1, figsize=(12.5, 5.8), constrained_layout=True)
     panels = (
@@ -136,10 +135,10 @@ def plot_flow(
         contour = axis.contourf(
             horizontal,
             vertical,
-            field,
+            np.ma.clip(field, LIQUID_VELOCITY_MIN, LIQUID_VELOCITY_MAX),
             levels=levels,
             cmap="turbo",
-            extend="both",
+            extend="max",
         )
         axis.contour(
             horizontal,
@@ -153,12 +152,78 @@ def plot_flow(
         axis.set_xlabel("z (mm)")
         axis.set_ylabel("x (mm)")
         axis.set_xlim(0.0, 39.4)
+        axis.set_ylim(-4.6, 4.6)
         axis.set_aspect("equal", adjustable="box")
         style_axis(axis)
     colorbar = fig.colorbar(contour, ax=axes, location="right", shrink=0.82, pad=0.025)
-    colorbar.set_label("Axial gas velocity, $w_g$ (m s$^{-1}$)")
+    colorbar.set_ticks(np.linspace(LIQUID_VELOCITY_MIN, LIQUID_VELOCITY_MAX, 6))
+    colorbar.set_label("Axial liquid velocity (m s$^{-1}$)")
     fig.suptitle(
-        "Matched gas-flow structure\n"
+        "Matched liquid-flow structure\n"
+        f"full: t = {full_time:.6f} s  ·  sector: t = {sector_time:.6f} s",
+        fontsize=15,
+        weight="semibold",
+    )
+    output.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output, dpi=220, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+
+
+def plot_cross_section(
+    full: dict[str, np.ndarray],
+    sector: dict[str, np.ndarray],
+    full_time: float,
+    sector_time: float,
+    output: Path,
+) -> None:
+    target_z = 0.005
+    full_k = int(np.argmin(np.abs(full["z"] - target_z)))
+    sector_k = int(np.argmin(np.abs(sector["z"] - target_z)))
+    full_w = fluid_mask(full["w_g"][full_k], full["volfrac"][full_k]).T
+    sector_w = fluid_mask(sector["w_g"][sector_k], sector["volfrac"][sector_k]).T
+    levels = np.linspace(LIQUID_VELOCITY_MIN, LIQUID_VELOCITY_MAX, 80)
+
+    fig, axes = plt.subplots(1, 2, figsize=(10.5, 5.2), constrained_layout=True)
+    panels = (
+        (axes[0], full["y"] * MM, full["x"] * MM, full_w, "Full 360° cylinder"),
+        (
+            axes[1],
+            sector["y"] * MM,
+            sector["x"] * MM,
+            sector_w,
+            "90° rotational sector",
+        ),
+    )
+    contour = None
+    for axis, horizontal, vertical, field, title in panels:
+        contour = axis.contourf(
+            horizontal,
+            vertical,
+            np.ma.clip(field, LIQUID_VELOCITY_MIN, LIQUID_VELOCITY_MAX),
+            levels=levels,
+            cmap="turbo",
+            extend="max",
+        )
+        axis.contour(
+            horizontal,
+            vertical,
+            np.ma.getmaskarray(field),
+            levels=[0.5],
+            colors="#232a31",
+            linewidths=0.8,
+        )
+        axis.set_title(title, fontsize=13, weight="semibold", pad=9)
+        axis.set_xlabel("y (mm)")
+        axis.set_ylabel("x (mm)")
+        axis.set_xlim(-4.9, 4.9)
+        axis.set_ylim(-4.9, 4.9)
+        axis.set_aspect("equal", adjustable="box")
+        style_axis(axis)
+    colorbar = fig.colorbar(contour, ax=axes, location="right", shrink=0.82, pad=0.03)
+    colorbar.set_ticks(np.linspace(LIQUID_VELOCITY_MIN, LIQUID_VELOCITY_MAX, 6))
+    colorbar.set_label("Axial liquid velocity (m s$^{-1}$)")
+    fig.suptitle(
+        "Liquid-velocity cross section at z = 5 mm\n"
         f"full: t = {full_time:.6f} s  ·  sector: t = {sector_time:.6f} s",
         fontsize=15,
         weight="semibold",
@@ -253,10 +318,7 @@ def plot_particles(
         axis.set_xlabel("z (mm)")
         axis.set_ylabel("x (mm)")
         axis.set_xlim(0.0, 39.4)
-        if is_sector:
-            axis.set_ylim(0.0, 4.6)
-        else:
-            axis.set_ylim(-4.6, 4.6)
+        axis.set_ylim(-4.6, 4.6)
         axis.set_aspect("equal", adjustable="box")
         style_axis(axis)
     colorbar = fig.colorbar(scatter, ax=axes, location="right", shrink=0.82, pad=0.025)
@@ -298,7 +360,14 @@ def main() -> None:
         sector_grid,
         full_time,
         sector_time,
-        args.output_dir / "matched_gas_flow.png",
+        args.output_dir / "matched_liquid_flow.png",
+    )
+    plot_cross_section(
+        full_grid,
+        sector_grid,
+        full_time,
+        sector_time,
+        args.output_dir / "matched_liquid_velocity_cross_section_z5mm.png",
     )
     plot_particles(
         full_points,

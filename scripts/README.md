@@ -15,7 +15,8 @@ python3 scripts/plot_particle_population.py \
 links, and the absence of common private-workspace identifiers.
 
 `render_snapshot_comparison.py` reads matched AMReX field and particle
-plotfiles and produces the two snapshot figures shown in the main README. It
+plotfiles and produces the longitudinal-flow, transverse cross-section, and
+particle snapshot figures shown in the main README. It
 requires NumPy, Matplotlib, and a VTK build that includes the AMReX
 grid and particle readers. Raw simulation plotfiles are intentionally outside
 this repository.

@@ -52,11 +52,18 @@ sustained coupled multi-rank pressure evolution is not qualified.
 
 These matched snapshots compare the monodisperse 20 µm-radius cases at nearly
 the same simulated time: `0.700515 s` for the full cylinder and `0.700000 s`
-for the 90° sector. Both flow panels use one shared color scale and a common
-physical axis scale. They are longitudinal views near the `y = 0` plane, with
-`z` horizontal and `x` vertical.
+for the 90° sector. Both flow panels use the same `0–0.002 m/s` axial liquid
+velocity range, identical plot limits, and a common physical axis scale. They
+are longitudinal views near the `y = 0` plane, with `z` horizontal and `x`
+vertical.
 
-![Matched full-cylinder and C90 axial gas-flow fields](figures/validation/matched_gas_flow.png)
+![Matched full-cylinder and C90 axial liquid-flow fields](figures/validation/matched_liquid_flow.png)
+
+The transverse view at `z = 5 mm` shows the resolved two-dimensional velocity
+variation across the third spatial dimension. The full circular section and
+the simulated quadrant retain the same coordinate and velocity scales.
+
+![Matched axial liquid-velocity cross sections at z = 5 mm](figures/validation/matched_liquid_velocity_cross_section_z5mm.png)
 
 The particle view uses the geometry extracted from the fluid volume-fraction
 field and colors particles by axial velocity on a shared scale. The side
