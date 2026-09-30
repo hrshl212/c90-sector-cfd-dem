@@ -299,15 +299,67 @@ def geometry_profile(fields: dict[str, np.ndarray]) -> tuple[np.ndarray, np.ndar
 def draw_3d_geometry(
     axis: plt.Axes, profile_z: np.ndarray, profile_r: np.ndarray, sector: bool
 ) -> None:
-    line = dict(color="#263746", linewidth=0.8, alpha=0.78)
+    line = dict(color="#263746", linewidth=1.0, alpha=0.9)
     transition = np.flatnonzero(np.abs(np.diff(profile_r)) > 0.15)
     ring_indices = np.unique(np.concatenate(([0], transition, transition + 1, [-1])))
     if sector:
-        theta = np.linspace(0.0, np.pi / 2.0, 80)
+        theta = np.linspace(0.0, np.pi / 2.0, 64)
         generators = (0.0, np.pi / 4.0, np.pi / 2.0)
     else:
-        theta = np.linspace(0.0, 2.0 * np.pi, 150)
+        theta = np.linspace(0.0, 2.0 * np.pi, 120)
         generators = (0.0, np.pi / 2.0, np.pi, 3.0 * np.pi / 2.0)
+
+    # A faint continuous shell makes the full circumference (or sector arc)
+    # readable even where the particle cloud is dense.
+    shell_axial = np.broadcast_to(profile_z[:, None], (len(profile_z), len(theta)))
+    shell_radius = profile_r[:, None]
+    shell_theta = np.broadcast_to(theta[None, :], shell_axial.shape)
+    axis.plot_surface(
+        shell_axial,
+        shell_radius * np.cos(shell_theta),
+        shell_radius * np.sin(shell_theta),
+        color="#8eabbc",
+        alpha=0.12,
+        linewidth=0,
+        antialiased=False,
+        shade=False,
+    )
+
+    # Show the inlet cross section explicitly. For C90 this is a quarter disk;
+    # for full360 it is a complete disk.
+    radial = np.linspace(0.0, profile_r[0], 18)
+    cap_radius, cap_theta = np.meshgrid(radial, theta, indexing="ij")
+    axis.plot_surface(
+        np.full_like(cap_radius, profile_z[0]),
+        cap_radius * np.cos(cap_theta),
+        cap_radius * np.sin(cap_theta),
+        color="#b7c9d3",
+        alpha=0.17,
+        linewidth=0,
+        antialiased=False,
+        shade=False,
+    )
+
+    if sector:
+        # The two transparent radial faces identify the simulated quotient
+        # domain without hiding particles inside it.
+        fraction = np.linspace(0.0, 1.0, 10)
+        face_axial = np.broadcast_to(
+            profile_z[:, None], (len(profile_z), len(fraction))
+        )
+        face_radius = profile_r[:, None] * fraction[None, :]
+        zeros = np.zeros_like(face_radius)
+        for face_x, face_y in ((face_radius, zeros), (zeros, face_radius)):
+            axis.plot_surface(
+                face_axial,
+                face_x,
+                face_y,
+                color="#9fb7c5",
+                alpha=0.10,
+                linewidth=0,
+                antialiased=False,
+                shade=False,
+            )
     for index in ring_indices:
         radius = profile_r[index]
         z_value = profile_z[index]
@@ -393,7 +445,7 @@ def plot_particles(
         axis.set_ylim(-4.6, 4.6)
         axis.set_zlim(-4.6, 4.6)
         axis.set_box_aspect((4.3, 1.0, 1.0), zoom=1.52)
-        axis.view_init(elev=17, azim=-72)
+        axis.view_init(elev=16, azim=-45)
         axis.xaxis.set_major_locator(mpl.ticker.MaxNLocator(5))
         axis.yaxis.set_major_locator(mpl.ticker.MaxNLocator(3))
         axis.zaxis.set_major_locator(mpl.ticker.MaxNLocator(3))

@@ -70,8 +70,10 @@ the simulated quadrant retain the same coordinate and velocity scales.
 The particle view uses the geometry extracted from the fluid volume-fraction
 field and colors particles by axial velocity on a shared scale. Perspective
 3D views keep the syringe axis horizontal and use identical coordinate bounds
-and geometry aspect ratios. At this
-instant, the full cylinder contains 432,544 particles; the sector contains
+and geometry aspect ratios. A translucent shell and complete circular end face
+identify the full-360 domain; the C90 view instead exposes its two radial
+rotational-boundary planes. At this instant, the full cylinder contains
+432,544 particles; the sector contains
 107,562, equivalent to 430,248 particles after fourfold replication. A
 deterministic display subset is used only to keep the raster figure legible.
 
