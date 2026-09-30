@@ -25,7 +25,7 @@ MFiX-Exa source tree. Those modifications are intentionally not included.
 See the [source and affiliation notice](NOTICE.md) for the distribution and
 licensing boundary.
 
-![Quarter-turn rotational mapping](figures/schematics/quadrant_mapping.svg)
+![C90 canonical sector with one real particle and three rotational images](figures/schematics/quadrant_mapping.svg)
 
 ## Validation snapshot
 

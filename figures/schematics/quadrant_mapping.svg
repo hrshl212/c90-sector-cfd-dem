@@ -1,29 +1,73 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560" role="img" aria-labelledby="title description">
-  <title id="title">Quarter-turn rotational mapping</title>
-  <desc id="description">A full circular domain divided into four quadrants, with the upper-right C90 sector highlighted and arrows identifying its two radial faces by a ninety-degree rotation.</desc>
-  <rect width="900" height="560" fill="#ffffff"/>
-  <g transform="translate(290 280)">
-    <path d="M 0 0 L 0 -210 A 210 210 0 0 1 210 0 Z" fill="#cfe8f3" stroke="#0072b2" stroke-width="4"/>
-    <path d="M 0 -210 A 210 210 0 1 1 -0.1 -210" fill="none" stroke="#404040" stroke-width="3"/>
-    <line x1="-210" y1="0" x2="210" y2="0" stroke="#8a8a8a" stroke-width="2"/>
-    <line x1="0" y1="-210" x2="0" y2="210" stroke="#8a8a8a" stroke-width="2"/>
-    <path d="M 18 -155 A 156 156 0 0 1 155 -18" fill="none" stroke="#d55e00" stroke-width="5" marker-end="url(#arrow)"/>
-    <circle cx="115" cy="-92" r="10" fill="#0072b2"/>
-    <circle cx="92" cy="115" r="8" fill="#ffffff" stroke="#0072b2" stroke-width="4" stroke-dasharray="5 4"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="620" viewBox="0 0 1180 620" role="img" aria-labelledby="title description">
+  <title id="title">C90 canonical sector and three rotational particle images</title>
+  <desc id="description">A full circular domain is divided into four quadrants. The upper-right ninety-degree canonical sector contains one stored real particle p. The other three quadrants contain generated images R p, R squared p, and R cubed p. Orange curved arrows explicitly show repeated application of the positive ninety-degree rotation operator and do not represent particle motion.</desc>
+
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <marker id="rotation-arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#d55e00"/>
     </marker>
   </defs>
+
+  <rect width="1180" height="620" fill="#ffffff"/>
+
+  <!-- Full cylinder cross section and the stored C90 quotient domain. -->
+  <g transform="translate(315 300)">
+    <circle cx="0" cy="0" r="235" fill="#f7f9fa" stroke="#343a40" stroke-width="3"/>
+    <path d="M 0 0 L 0 -235 A 235 235 0 0 1 235 0 Z"
+          fill="#cfe8f3" stroke="#0072b2" stroke-width="4"/>
+    <line x1="-235" y1="0" x2="235" y2="0" stroke="#7a838a" stroke-width="2"/>
+    <line x1="0" y1="-235" x2="0" y2="235" stroke="#7a838a" stroke-width="2"/>
+
+    <!-- Repeated action of R links the real particle to all three images. -->
+    <g fill="none" stroke="#d55e00" stroke-width="3.5" marker-end="url(#rotation-arrow)">
+      <path d="M 112 -103 A 153 153 0 0 0 -84 -128"/>
+      <path d="M -103 -112 A 153 153 0 0 0 -128 84"/>
+      <path d="M -112 103 A 153 153 0 0 0 84 128"/>
+      <path d="M 103 112 A 153 153 0 0 0 128 -84"/>
+    </g>
+
+    <!-- One real particle in the canonical sector. -->
+    <circle cx="120" cy="-95" r="12" fill="#0072b2" stroke="#00466d" stroke-width="2"/>
+
+    <!-- Three virtual rotational images generated from p. -->
+    <g fill="#ffffff" stroke="#0072b2" stroke-width="3.5" stroke-dasharray="6 4">
+      <circle cx="-95" cy="-120" r="11"/>
+      <circle cx="-120" cy="95" r="11"/>
+      <circle cx="95" cy="120" r="11"/>
+    </g>
+
+    <g font-family="sans-serif" font-size="19" font-weight="600" fill="#20252a">
+      <text x="136" y="-101">p (real)</text>
+      <text x="-154" y="-139">Rp</text>
+      <text x="-174" y="105">R²p</text>
+      <text x="111" y="143">R³p</text>
+    </g>
+
+    <g font-family="sans-serif" font-size="17" font-weight="600">
+      <text x="14" y="-198" fill="#0072b2">Γ₁</text>
+      <text x="188" y="-14" fill="#0072b2">Γ₂</text>
+      <text x="48" y="-48" fill="#d55e00">R = +90°</text>
+    </g>
+  </g>
+
   <g font-family="sans-serif" fill="#252525">
-    <text x="535" y="95" font-size="30" font-weight="600">C90 canonical sector</text>
-    <text x="535" y="145" font-size="22">Scalar: q(Rx) = q(x)</text>
-    <text x="535" y="185" font-size="22">Vector: u(Rx) = R u(x)</text>
-    <text x="535" y="245" font-size="22">Rotated copies represent</text>
-    <text x="535" y="278" font-size="22">the full cylinder.</text>
-    <text x="535" y="350" font-size="20" fill="#d55e00">90° face identification</text>
-    <text x="535" y="400" font-size="20" fill="#0072b2">● real particle</text>
-    <text x="535" y="438" font-size="20" fill="#0072b2">○ rotational image</text>
+    <text x="595" y="78" font-size="31" font-weight="700">C90 canonical sector</text>
+
+    <rect x="590" y="102" width="550" height="155" rx="12" fill="#f4f8fa" stroke="#b5c6cf" stroke-width="1.5"/>
+    <text x="615" y="135" font-size="20" font-weight="600" fill="#0072b2">Blue quadrant = stored domain</text>
+    <text x="615" y="171" font-size="19">One real particle p is stored and advanced.</text>
+    <text x="615" y="205" font-size="19">Three virtual images are generated:</text>
+    <text x="650" y="236" font-size="20" font-weight="600">Rp, R²p, and R³p.</text>
+
+    <text x="595" y="301" font-size="22" font-weight="650">What the orange arrows mean</text>
+    <text x="615" y="337" font-size="19">Each arrow applies the quarter-turn operator R.</text>
+    <text x="615" y="369" font-size="19" font-weight="600" fill="#a84300">They are not velocity or trajectory arrows.</text>
+
+    <text x="595" y="421" font-size="22" font-weight="650">Why the images exist</text>
+    <text x="615" y="457" font-size="19">They expose cyclic neighbors and contacts while</text>
+    <text x="615" y="488" font-size="19">only the canonical particle p remains physical.</text>
+
+    <text x="595" y="542" font-size="19">Cyclic faces: Γ₂ = RΓ₁</text>
+    <text x="595" y="574" font-size="19">Scalar: q(Rx) = q(x)   ·   Vector: u(Rx) = Ru(x)</text>
   </g>
 </svg>
