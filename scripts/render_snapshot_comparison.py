@@ -350,10 +350,10 @@ def plot_particles(
     v_min, v_max = np.nanpercentile(all_velocity, (1.0, 99.0))
     norm = mpl.colors.Normalize(vmin=v_min, vmax=v_max)
 
-    fig = plt.figure(figsize=(13.0, 5.8))
+    fig = plt.figure(figsize=(13.0, 8.2))
     axes = [
-        fig.add_axes((0.02, 0.10, 0.42, 0.68), projection="3d"),
-        fig.add_axes((0.45, 0.10, 0.42, 0.68), projection="3d"),
+        fig.add_axes((0.02, 0.51, 0.84, 0.32), projection="3d"),
+        fig.add_axes((0.02, 0.07, 0.84, 0.32), projection="3d"),
     ]
     panels = (
         (
@@ -392,7 +392,7 @@ def plot_particles(
         axis.set_xlim(0.0, 39.4)
         axis.set_ylim(-4.6, 4.6)
         axis.set_zlim(-4.6, 4.6)
-        axis.set_box_aspect((4.3, 1.0, 1.0), zoom=1.18)
+        axis.set_box_aspect((4.3, 1.0, 1.0), zoom=1.52)
         axis.view_init(elev=17, azim=-72)
         axis.xaxis.set_major_locator(mpl.ticker.MaxNLocator(5))
         axis.yaxis.set_major_locator(mpl.ticker.MaxNLocator(3))
@@ -402,9 +402,9 @@ def plot_particles(
         axis.xaxis.pane.set_alpha(0.0)
         axis.yaxis.pane.set_alpha(0.0)
         axis.zaxis.pane.set_alpha(0.0)
-    fig.text(0.23, 0.80, panels[0][3], ha="center", va="center", fontsize=12, weight="semibold")
-    fig.text(0.66, 0.80, panels[1][3], ha="center", va="center", fontsize=12, weight="semibold")
-    color_axis = fig.add_axes((0.90, 0.16, 0.018, 0.58))
+    fig.text(0.44, 0.85, panels[0][3], ha="center", va="center", fontsize=12, weight="semibold")
+    fig.text(0.44, 0.41, panels[1][3], ha="center", va="center", fontsize=12, weight="semibold")
+    color_axis = fig.add_axes((0.90, 0.17, 0.018, 0.64))
     colorbar = fig.colorbar(scatter, cax=color_axis)
     colorbar.set_label("Particle axial velocity, $v_{p,z}$ (m s$^{-1}$)")
     fig.suptitle(
